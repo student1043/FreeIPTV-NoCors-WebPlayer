@@ -63,8 +63,8 @@ class molly_class{
 	header=( mimeType="text/plain" )=>{
 		return {
 			'Content-Security-Policy-Reporn-Only': "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
-			'Strict-Transport-Security': 'max-age=6000; preload',
-		//	'cache-control': 'public, max-age=6000',
+			'Strict-Transport-Security': 'max-age=6000000; preload',
+		//	'cache-control': 'public, max-age=6000000',
 		//	'Access-Control-Allow-Origin':'*',
 			'Content-Type':mimeType 
 		};
@@ -74,9 +74,9 @@ class molly_class{
 		const contentLength = end-start+1;
 		return {
 			'Content-Security-Policy-Reporn-Only': "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
-			'Strict-Transport-Security': 'max-age=6000; preload',
+			'Strict-Transport-Security': 'max-age=6000000; preload',
 			"Content-Range":`bytes ${start}-${end}/${size}`,
-		//	'cache-control': 'public, max-age=6000',
+		//	'cache-control': 'public, max-age=6000000',
 		//	"Access-Control-Allow-Origin":"*",
 			"Content-Length":contentLength,
 			"Content-Type": mimeType,
@@ -85,42 +85,42 @@ class molly_class{
 	}
 	
 	router=( req,res )=>{
-		var q = url.parse(req.url, true);
-		var d = q.query;
+		req.parse = url.parse(req.url, true);
+		req.query = req.parse.query;
 	
 		//TODO: Server Pages XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
-		if( q.pathname=="/" ){
+		if( req.parse.pathname=="/" ){
 			fs.readFile(`${this.front}/index.html`, (err,data)=>{
 				if (err) {
 					res.writeHead(404, this.header('text/html'));
 					return res.end( this._404_() ); }
 				res.writeHead(200, this.header('text/html'));
-				res.end(data);
+				return res.end(data);
 			});
 			
-		} else if( fs.existsSync(`${this.front}${q.pathname}.html`) ) {
-			let data = fs.readFileSync(`${this.front}${q.pathname}.html`);
+		} else if( fs.existsSync(`${this.front}${req.parse.pathname}.html`) ) {
+			let data = fs.readFileSync(`${this.front}${req.parse.pathname}.html`);
 			res.writeHead(200, this.header('text/html')); 
-			res.end(data);
+			return res.end(data);
 			
-		} else if( fs.existsSync(`${this.back}${q.pathname}.js`) ) {
-			let data = fs.readFileSync(`${this.back}${q.pathname}.js`);
+		} else if( fs.existsSync(`${this.back}${req.parse.pathname}.js`) ) {
+			let data = fs.readFileSync(`${this.back}${req.parse.pathname}.js`);
 			eval(` try{ ${data} } catch(err) { console.log( err );
 				res.writeHead(200, this.header('text/html'));
-				res.end( 'something went wrong' );
-			}`);
+				res.end('something went wrong'); 
+			}`);return 0;
 		}
 	
 		//TODO: Server Chunk XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		else{
 			const keys = Object.keys(mimeType);
 			for( var i in keys ){
-				if( q.pathname.endsWith(keys[i]) ){
+				if( req.parse.pathname.endsWith(keys[i]) ){
 				
 					const range = req.headers.range;
-					const url = (`${this.front}${q.pathname}`).replace(/%20/g,' ');
+					const url = (`${this.front}${req.parse.pathname}`).replace(/%20/g,' ');
 			
-					try{ 	
+					try{	
 						if(range) {
 							const chuck_size = Math.pow( 10,6 ); 
 							const size = fs.statSync( url ).size;
@@ -134,19 +134,20 @@ class molly_class{
 						} else {
 							if( fs.existsSync( url ) ){
 								res.writeHead(200, this.header( mimeType[keys[i]] ));
-								res.end( fs.readFileSync( url ) );
+								return res.end( fs.readFileSync( url ) );
 							}
 						}	
 					
 					} catch(e) {
 						res.writeHead(404, this.header('text/html'));
-						res.end( this._404_() );
-					}	return 0;		
+						return res.end( this._404_() );
+					}	
+						
 				}
 			}	
 		
 			res.writeHead(404, this.header('text/html'));
-			res.end( this._404_() );
+			return res.end( this._404_() );
 		}
 	}
 	
@@ -177,7 +178,7 @@ class molly_class{
 };	mollyJS = molly_class;
 
 //TODO: Main Functions  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX //
-server = new mollyJS( 3000,'./www', './controller' );
+server = new mollyJS( 3000, './www', './controller' );
 server.startHttpServer();
 
 
