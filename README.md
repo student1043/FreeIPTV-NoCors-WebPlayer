@@ -1,1 +1,2 @@
-# MollyJS-Backend-Core
+# MollyJS-Backend-core
+MollyJS Backend Core algorithm

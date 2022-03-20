@@ -1,0 +1,32 @@
+<!Doctype html>
+<html lang="es">
+
+	<head>
+		<meta charset="UTF-8">
+		
+		<title> Vanilla Example </title>
+		
+ 		<meta name="author" content="Enmanuel Becerra">
+		<meta name="description" content="Free Web tutorials">
+  		<meta name="keywords" content="HTML, CSS, JavaScript">
+  		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<!-- UIkit CDN -->
+		<script src="https://cdn.jsdelivr.net/npm/uikit@3.9.3/dist/js/uikit.min.js"></script>
+		<script src="https://cdn.jsdelivr.net/npm/uikit@3.9.3/dist/js/uikit-icons.min.js"></script>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uikit@3.9.3/dist/css/uikit.min.css" />
+
+		<!-- my code -->
+		<script>
+			$ = ( ...args )=>{ return document.querySelector(args); }
+			fetch('/main').then( async (response)=>{ $('h1').innerHTML+= await response.text() })
+		</script>
+
+	</head>
+
+	<body>
+		<h1> Hi Hello World </h1>
+		
+	</body>	
+
+</html>
