@@ -6,6 +6,20 @@ const http = require('http');
 const url = require('url');
 const fs = require('fs');
 
+//TODO: String Normalization ################################################ //
+const slugify = str => { const map = {
+    'c' : 'ç|Ç','n' : 'ñ|Ñ',
+   	'e' : 'é|è|ê|ë|É|È|Ê|Ë',
+   	'i' : 'í|ì|î|ï|Í|Ì|Î|Ï',
+   	'u' : 'ú|ù|û|ü|Ú|Ù|Û|Ü',
+   	'o' : 'ó|ò|ô|õ|ö|Ó|Ò|Ô|Õ|Ö',
+   	'a' : 'á|à|ã|â|ä|À|Á|Ã|Â|Ä',
+	''	: ` |:|_|!|¡|¿|\\?|#|/|,|-|'|"|’`,
+};	for (var pattern in map) { 
+		str=str.replace( new RegExp(map[pattern],'g' ), pattern); 
+	}	return str.toLowerCase();
+}
+
 //TODO: String Normalization XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 const mimeType = {    
     "bmp" : "image/bmp",
@@ -56,15 +70,17 @@ class molly_class{
 
 	constructor( Port, front_path, back_path ){
 		this.port = process.env.PORT || Port;
+		this.max_age = 1000 * 60 * 60 * 24;
+		this.timeout = 1000 * 60 * 10;
 		this.front= `${front_path}`;
-		this.back = `${back_path}`;
+		this.back = `${back_path}`; 
 	}
 	
 	header=( mimeType="text/plain" )=>{
 		return {
 			'Content-Security-Policy-Reporn-Only': "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
-			'Strict-Transport-Security': 'max-age=6000000; preload',
-		//	'cache-control': 'public, max-age=6000000',
+			'Strict-Transport-Security': `max-age=${this.max_age}; preload`,
+		//	'cache-control': `public, max-age=${this.max_age}`,
 		//	'Access-Control-Allow-Origin':'*',
 			'Content-Type':mimeType 
 		};
@@ -74,9 +90,9 @@ class molly_class{
 		const contentLength = end-start+1;
 		return {
 			'Content-Security-Policy-Reporn-Only': "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
-			'Strict-Transport-Security': 'max-age=6000000; preload',
+			'Strict-Transport-Security': `max-age=${this.max_age}; preload`,
+		//	'cache-control': `public, max-age=${this.max_age}`,
 			"Content-Range":`bytes ${start}-${end}/${size}`,
-		//	'cache-control': 'public, max-age=6000000',
 		//	"Access-Control-Allow-Origin":"*",
 			"Content-Length":contentLength,
 			"Content-Type": mimeType,
@@ -87,6 +103,12 @@ class molly_class{
 	router=( req,res )=>{
 		req.parse = url.parse(req.url, true);
 		req.query = req.parse.query;
+		
+		//TODO: _main_ Function  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
+		try{
+			let data = fs.readFileSync(`${this.back}/_main_.js`);
+			eval( data.toString() );// return 0;
+		} catch(e) { }
 	
 		//TODO: Server Pages XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		if( req.parse.pathname=="/" ){
@@ -129,7 +151,7 @@ class molly_class{
 
 							res.writeHead(206, this.chunkheader( start,end,size,mimeType[keys[i]] ));
 							const chuck = fs.createReadStream( url,{start,end} );
-							chuck.pipe( res );	
+							chuck.pipe( res ); return 0;
 						
 						} else {
 							if( fs.existsSync( url ) ){
@@ -138,23 +160,20 @@ class molly_class{
 							}
 						}	
 					
-					} catch(e) {
-						res.writeHead(404, this.header('text/html'));
-						return res.end( this._404_() );
-					}	
+					} catch(e) {} return 0;
 						
 				}
-			}	
-		
+			}
+			
 			res.writeHead(404, this.header('text/html'));
-			return res.end( this._404_() );
+			res.end( this._404_() );	
 		}
 	}
 	
 	startHttpServer=()=>{
-		http.createServer( this.router ).listen( this.port,'0.0.0.0',()=>{
+		let server = http.createServer( this.router ).listen( this.port,'0.0.0.0',()=>{
 			console.log(`server started at http://localhost:${this.port}`);
-		}); 
+		}); server.setTimeout( this.timeout );	
 	}
 		
 	startHttpSecureServer=( key_path, cert_path )=>{
@@ -163,9 +182,9 @@ class molly_class{
 			cert: fs.readFileSync('localhost-cert.pem')
 		}
 	
-		https.createSecureServer( key, this.router ).listen( this.port,'0.0.0.0',()=>{
+		let server = https.createSecureServer( key, this.router ).listen( this.port,'0.0.0.0',()=>{
 			console.log(`server started at https://localhost:${this.port}`);
-		}); 
+		}); server.setTimeout( this.timeout );		
 	}
 	
 	_404_=()=>{ 
