@@ -6,6 +6,20 @@ const http = require('http');
 const url = require('url');
 const fs = require('fs');
 
+//TODO: String Normalization ################################################ //
+const slugify = str => { const map = {
+    'c' : 'ç|Ç','n' : 'ñ|Ñ',
+   	'e' : 'é|è|ê|ë|É|È|Ê|Ë',
+   	'i' : 'í|ì|î|ï|Í|Ì|Î|Ï',
+   	'u' : 'ú|ù|û|ü|Ú|Ù|Û|Ü',
+   	'o' : 'ó|ò|ô|õ|ö|Ó|Ò|Ô|Õ|Ö',
+   	'a' : 'á|à|ã|â|ä|À|Á|Ã|Â|Ä',
+	''	: ` |:|_|!|¡|¿|\\?|#|/|,|-|'|"|’`,
+};	for (var pattern in map) { 
+		str=str.replace( new RegExp(map[pattern],'g' ), pattern); 
+	}	return str.toLowerCase();
+}
+
 //TODO: String Normalization XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 const mimeType = {    
     "bmp" : "image/bmp",
@@ -52,44 +66,32 @@ const mimeType = {
 
 //TODO: Main Class  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX //
 
-const mollyJS = function( Port, front_path, back_path ){
-	const mollyJS = {
-		port: process.env.PORT || Port,
-		max_age: 1000 * 60 * 60 * 24,
-		timeout: 1000 * 60 * 10,
-		front: front_path,
-		back: back_path,
-	};
-	
-	mollyJS.slugify = function(str){ const map = {
-		'c' : 'ç|Ç','n' : 'ñ|Ñ',
-	   	'e' : 'é|è|ê|ë|É|È|Ê|Ë',
-	   	'i' : 'í|ì|î|ï|Í|Ì|Î|Ï',
-	   	'u' : 'ú|ù|û|ü|Ú|Ù|Û|Ü',
-	   	'o' : 'ó|ò|ô|õ|ö|Ó|Ò|Ô|Õ|Ö',
-	   	'a' : 'á|à|ã|â|ä|À|Á|Ã|Â|Ä',
-		''	: ` |:|_|!|¡|¿|\\?|#|/|,|-|'|"|’`,
-	};	for (var pattern in map) { 
-			str=str.replace( new RegExp(map[pattern],'g' ), pattern); 
-		}	return str.toLowerCase();
+class molly_class{
+
+	constructor( Port, front_path, back_path ){
+		this.port = process.env.PORT || Port;
+		this.max_age = 1000 * 60 * 60 * 24;
+		this.timeout = 1000 * 60 * 10;
+		this.front= `${front_path}`;
+		this.back = `${back_path}`; 
 	}
 	
-	mollyJS.header = function( mimeType="text/plain" ){
+	header=( mimeType="text/plain" )=>{
 		return {
 			'Content-Security-Policy-Reporn-Only': "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
-			'Strict-Transport-Security': `max-age=${mollyJS.max_age}; preload`,
-		//	'cache-control': `public, max-age=${mollyJS.max_age}`,
+			'Strict-Transport-Security': `max-age=${this.max_age}; preload`,
+		//	'cache-control': `public, max-age=${this.max_age}`,
 		//	'Access-Control-Allow-Origin':'*',
 			'Content-Type':mimeType 
 		};
 	}
 
-	mollyJS.chunkheader = function( start,end,size,mimeType="text/plain" ){
+	chunkheader=( start,end,size,mimeType="text/plain" )=>{
 		const contentLength = end-start+1;
 		return {
 			'Content-Security-Policy-Reporn-Only': "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
-			'Strict-Transport-Security': `max-age=${mollyJS.max_age}; preload`,
-		//	'cache-control': `public, max-age=${mollyJS.max_age}`,
+			'Strict-Transport-Security': `max-age=${this.max_age}; preload`,
+		//	'cache-control': `public, max-age=${this.max_age}`,
 			"Content-Range":`bytes ${start}-${end}/${size}`,
 		//	"Access-Control-Allow-Origin":"*",
 			"Content-Length":contentLength,
@@ -98,35 +100,35 @@ const mollyJS = function( Port, front_path, back_path ){
 		};
 	}
 	
-	mollyJS.router = function( req,res ){
+	router=( req,res )=>{
 		req.parse = url.parse(req.url, true);
 		req.query = req.parse.query;
 		
 		//TODO: _main_ Function  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		try{
-			let data = fs.readFileSync(`${mollyJS.back}/_main_.js`);
-			eval( data.toString() );
+			let data = fs.readFileSync(`${this.back}/_main_.js`);
+			eval( data.toString() );// return 0;
 		} catch(e) { }
 	
 		//TODO: Server Pages XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		if( req.parse.pathname=="/" ){
-			fs.readFile(`${mollyJS.front}/index.html`, (err,data)=>{
+			fs.readFile(`${this.front}/index.html`, (err,data)=>{
 				if (err) {
-					res.writeHead(404, mollyJS.header('text/html'));
-					return res.end( mollyJS._404_() ); }
-				res.writeHead(200, mollyJS.header('text/html'));
+					res.writeHead(404, this.header('text/html'));
+					return res.end( this._404_() ); }
+				res.writeHead(200, this.header('text/html'));
 				return res.end(data);
 			});
 			
-		} else if( fs.existsSync(`${mollyJS.front}${req.parse.pathname}.html`) ) {
-			let data = fs.readFileSync(`${mollyJS.front}${req.parse.pathname}.html`);
-			res.writeHead(200, mollyJS.header('text/html')); 
+		} else if( fs.existsSync(`${this.front}${req.parse.pathname}.html`) ) {
+			let data = fs.readFileSync(`${this.front}${req.parse.pathname}.html`);
+			res.writeHead(200, this.header('text/html')); 
 			return res.end(data);
 			
-		} else if( fs.existsSync(`${mollyJS.back}${req.parse.pathname}.js`) ) {
-			let data = fs.readFileSync(`${mollyJS.back}${req.parse.pathname}.js`);
+		} else if( fs.existsSync(`${this.back}${req.parse.pathname}.js`) ) {
+			let data = fs.readFileSync(`${this.back}${req.parse.pathname}.js`);
 			eval(` try{ ${data} } catch(err) { console.log( err );
-				res.writeHead(200, mollyJS.header('text/html'));
+				res.writeHead(200, this.header('text/html'));
 				res.end('something went wrong'); 
 			}`);return 0;
 		}
@@ -136,9 +138,9 @@ const mollyJS = function( Port, front_path, back_path ){
 			const keys = Object.keys(mimeType);
 			for( var i in keys ){
 				if( req.parse.pathname.endsWith(keys[i]) ){
-			
+				
 					const range = req.headers.range;
-					const url = (`${mollyJS.front}${req.parse.pathname}`).replace(/%20/g,' ');
+					const url = (`${this.front}${req.parse.pathname}`).replace(/%20/g,' ');
 			
 					try{	
 						if(range) {
@@ -147,13 +149,13 @@ const mollyJS = function( Port, front_path, back_path ){
 							const start = Number(range.replace(/\D/g,""));
 							const end = Math.min(chuck_size+start,size-1);
 
-							res.writeHead(206, mollyJS.chunkheader( start,end,size,mimeType[keys[i]] ));
+							res.writeHead(206, this.chunkheader( start,end,size,mimeType[keys[i]] ));
 							const chuck = fs.createReadStream( url,{start,end} );
 							chuck.pipe( res ); return 0;
-					
+						
 						} else {
 							if( fs.existsSync( url ) ){
-								res.writeHead(200, mollyJS.header( mimeType[keys[i]] ));
+								res.writeHead(200, this.header( mimeType[keys[i]] ));
 								return res.end( fs.readFileSync( url ) );
 							}
 						}	
@@ -163,38 +165,37 @@ const mollyJS = function( Port, front_path, back_path ){
 				}
 			}
 			
-			res.writeHead(404, mollyJS.header('text/html'));
-			res.end( mollyJS._404_() );	
+			res.writeHead(404, this.header('text/html'));
+			res.end( this._404_() );	
 		}
 	}
 	
-	mollyJS.startHttpServer = function(){
-		let server = http.createServer( mollyJS.router ).listen( mollyJS.port,'0.0.0.0',()=>{
-			console.log(`server started at http://localhost:${mollyJS.port}`);
-		}); server.setTimeout( mollyJS.timeout );	
+	startHttpServer=()=>{
+		let server = http.createServer( this.router ).listen( this.port,'0.0.0.0',()=>{
+			console.log(`server started at http://localhost:${this.port}`);
+		}); server.setTimeout( this.timeout );	
 	}
 		
-	mollyJS.startHttpSecureServer = function( key_path, cert_path ){
+	startHttpSecureServer=( key_path, cert_path )=>{
 		let key = {
 			key: fs.readFileSync('localhost-privkey.pem'),
 			cert: fs.readFileSync('localhost-cert.pem')
 		}
 	
-		let server = https.createSecureServer( key, mollyJS.router ).listen( mollyJS.port,'0.0.0.0',()=>{
-			console.log(`server started at https://localhost:${mollyJS.port}`);
-		}); server.setTimeout( mollyJS.timeout );		
+		let server = https.createSecureServer( key, this.router ).listen( this.port,'0.0.0.0',()=>{
+			console.log(`server started at https://localhost:${this.port}`);
+		}); server.setTimeout( this.timeout );		
 	}
 	
-	mollyJS._404_ = function(){ 
-		let url = `${mollyJS.front}/404.html`
+	_404_=()=>{ 
+		let url = `${this.front}/404.html`
 		if( fs.existsSync(url) )
-			return fs.readFileSync(`${mollyJS.front}/404.html`); 
+			return fs.readFileSync(`${this.front}/404.html`); 
 		return 'Oops 404 not found';
 	}
 	
-	return mollyJS;
-};
-	
+};	mollyJS = molly_class;
+
 //TODO: Main Functions  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX //
 server = new mollyJS( 3000, './www', './controller' );
 server.startHttpServer();

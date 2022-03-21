@@ -1,8 +1,16 @@
 {
-  "dependencies": {
-    "axios": "^0.26.1",
-    "fs": "^0.0.1-security",
-    "http": "^0.0.1-security",
-    "url": "^0.11.0"
-  }
+  	"name": "MollyJS",
+  	"version": "1.0.0",
+  	"node-remote": "*://*",
+  	"node-main": "main.js",
+  	"description": "MollyJS is a Framework for Backend",
+  	"scripts": { "start": "node main" },
+  	"keywords": [],
+  	"author": "Enmanuel Becerra",
+  	"dependencies": {
+		"axios": "^0.26.1",
+		"fs": "^0.0.1-security",
+		"http": "^0.0.1-security",
+		"url": "^0.11.0"
+  	}
 }
