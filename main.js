@@ -9,15 +9,19 @@ const fs = require('fs');
 //TODO: String Normalization XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 const mimeType = {    
 
-	//TODO: Images Mimetype //
-    "bmp" : "image/bmp",
-    "gif" : "image/gif",
-    "png" : "image/png",
-    "jpg" : "image/jpeg",
-    "jpeg": "image/jpeg",
-    "webp": "image/webp",
-    "svg" : "image/svg+xml",
-    "ico" : "image/vnd.microsoft.icon",
+	//TODO: 3D Format Mimetype //
+	"fbx" : "text/plain",
+	"dae" : "text/plain",
+	"mtl" : "text/plain",
+	"obj" : "text/plain",
+	"glb" : "text/plain",
+	"gltf": "text/plain",
+    
+	//TODO: Font Mimetype //	
+    "otf" : "font/otf",
+    "ttf" : "font/ttf",
+    "woff": "font/woff",
+    "woff2": "font/woff2",
     
 	//TODO: Audio Mimetype //
     "oga" : "audio/ogg",
@@ -34,14 +38,6 @@ const mimeType = {
     "webm": "video/webm",
     "mpeg": "video/mpeg",
     "avi" : "video/x-msvideo",
-
-	//TODO: 3D Format Mimetype //
-	"fbx" : "text/plain",
-	"dae" : "text/plain",
-	"mtl" : "text/plain",
-	"obj" : "text/plain",
-	"glb" : "text/plain",
-	"gltf": "text/plain",
     
 	//TODO: Text Mimetype //
     "css" : "text/css",
@@ -52,12 +48,16 @@ const mimeType = {
     "ics" : "text/calendar",
     "js"  : "text/javascript",
     "xml" : "application/xhtml+xml",
-    
-	//TODO: Font Mimetype //	
-    "otf" : "font/otf",
-    "ttf" : "font/ttf",
-    "woff": "font/woff",
-    "woff2": "font/woff2",
+
+	//TODO: Images Mimetype //
+    "bmp" : "image/bmp",
+    "gif" : "image/gif",
+    "png" : "image/png",
+    "jpg" : "image/jpeg",
+    "jpeg": "image/jpeg",
+    "webp": "image/webp",
+    "svg" : "image/svg+xml",
+    "ico" : "image/vnd.microsoft.icon",
     
 	//TODO: Especial Mimetype //
     "zip" : "application/zip",
@@ -108,14 +108,17 @@ const mollyJS = function( Port, front_path, back_path ){
 		}	return str.toLowerCase();
 	}
 	
-	mollyJS.header = function( mimeType="text/plain" ){
-		return {
+	mollyJS.header = function( mimeType="text/plain",size=0 ){
+		const header = {
 			'Content-Security-Policy-Reporn-Only': "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
 			'Strict-Transport-Security': `max-age=${mollyJS.max_age}; preload`,
 		//	'cache-control': `public, max-age=${mollyJS.max_age}`,
 		//	'Access-Control-Allow-Origin':'*',
 			'Content-Type':mimeType 
 		};
+		
+		if( size ) header['Content-Length'] = size;
+		return header;
 	}
 
 	mollyJS.chunkheader = function( start,end,size,mimeType="text/plain" ){
@@ -171,27 +174,25 @@ const mollyJS = function( Port, front_path, back_path ){
 			for( var i in keys ){
 				if( req.parse.pathname.endsWith(keys[i]) ){
 			
-					const range = req.headers.range;
-					const url = (`${mollyJS.front}${req.parse.pathname}`).replace(/%20/g,' ');
-			
 					try{	
-						if(range) {
+					
+						const url = (`${mollyJS.front}${req.parse.pathname}`);
+						const size = fs.statSync( url ).size;
+						const range = req.headers.range;
+					
+						if( !range ) { if( fs.existsSync( url ) ){
+							res.writeHead(200, mollyJS.header( mimeType[keys[i]],size ));
+							res.end( fs.readFileSync( url ) ); return 0;
+						}} else { 
 							const chuck_size = Math.pow( 10,6 ); 
-							const size = fs.statSync( url ).size;
 							const start = Number(range.replace(/\D/g,""));
 							const end = Math.min(chuck_size+start,size-1);
+							const chuck = fs.createReadStream( url,{start,end} );
 
 							res.writeHead(206, mollyJS.chunkheader( start,end,size,mimeType[keys[i]] ));
-							const chuck = fs.createReadStream( url,{start,end} );
 							chuck.pipe( res ); return 0;
-					
-						} else {
-							if( fs.existsSync( url ) ){
-								res.writeHead(200, mollyJS.header( mimeType[keys[i]] ));
-								return res.end( fs.readFileSync( url ) );
-							}
-						}	
-					
+						}
+						
 					} catch(e) {} return 0;
 						
 				}
