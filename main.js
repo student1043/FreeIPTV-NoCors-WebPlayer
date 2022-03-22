@@ -7,7 +7,7 @@ const url = require('url');
 const fs = require('fs');
 
 //TODO: String Normalization XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
-const mimeType = {    
+const mimeType = {	
 
 	//TODO: 3D Format Mimetype //
 	"fbx" : "text/plain",
@@ -16,72 +16,72 @@ const mimeType = {
 	"obj" : "text/plain",
 	"glb" : "text/plain",
 	"gltf": "text/plain",
-    
+	
 	//TODO: Font Mimetype //	
-    "otf" : "font/otf",
-    "ttf" : "font/ttf",
-    "woff": "font/woff",
-    "woff2": "font/woff2",
-    
+	"otf" : "font/otf",
+	"ttf" : "font/ttf",
+	"woff": "font/woff",
+	"woff2": "font/woff2",
+	
 	//TODO: Audio Mimetype //
-    "oga" : "audio/ogg",
-    "aac" : "audio/aac",
-    "wav" : "audio/wav",
-    "mp3" : "audio/mpeg",
-    "opus": "audio/opus",
-    "weba": "audio/webm",
-    
+	"oga" : "audio/ogg",
+	"aac" : "audio/aac",
+	"wav" : "audio/wav",
+	"mp3" : "audio/mpeg",
+	"opus": "audio/opus",
+	"weba": "audio/webm",
+	
 	//TODO: Video Mimetype //
-    "ogv" : "video/ogg",
-    "mp4" : "video/mp4",
-    "ts"  : "video/mp2t",
-    "webm": "video/webm",
-    "mpeg": "video/mpeg",
-    "avi" : "video/x-msvideo",
-    
+	"ogv" : "video/ogg",
+	"mp4" : "video/mp4",
+	"ts"  : "video/mp2t",
+	"webm": "video/webm",
+	"mpeg": "video/mpeg",
+	"avi" : "video/x-msvideo",
+	
 	//TODO: Text Mimetype //
-    "css" : "text/css",
-    "csv" : "text/csv",
-    "html": "text/html",
-    "text": "text/plain",
-    "txt" : "text/plain",
-    "ics" : "text/calendar",
-    "js"  : "text/javascript",
-    "xml" : "application/xhtml+xml",
+	"css" : "text/css",
+	"csv" : "text/csv",
+	"html": "text/html",
+	"text": "text/plain",
+	"txt" : "text/plain",
+	"ics" : "text/calendar",
+	"js"  : "text/javascript",
+	"xml" : "application/xhtml+xml",
 
 	//TODO: Images Mimetype //
-    "bmp" : "image/bmp",
-    "gif" : "image/gif",
-    "png" : "image/png",
-    "jpg" : "image/jpeg",
-    "jpeg": "image/jpeg",
-    "webp": "image/webp",
-    "svg" : "image/svg+xml",
-    "ico" : "image/vnd.microsoft.icon",
-    
+	"bmp" : "image/bmp",
+	"gif" : "image/gif",
+	"png" : "image/png",
+	"jpg" : "image/jpeg",
+	"jpeg": "image/jpeg",
+	"webp": "image/webp",
+	"svg" : "image/svg+xml",
+	"ico" : "image/vnd.microsoft.icon",
+	
 	//TODO: Especial Mimetype //
-    "zip" : "application/zip",
-    "gz"  : "application/gzip",
+	"zip" : "application/zip",
+	"gz"  : "application/gzip",
 	"sh"  : "application/x-sh",
-    "json": "application/json",
-    "tar" : "application/x-tar",
-    "rar" : "application/vnd.rar",
-    "7z"  : "application/x-7z-compressed",
-    "m3u8": "application/vnd.apple.mpegurl",
-    
-	//TODO: Document Mimetype //    
-    "pdf" : "application/pdf",	
-    "doc" : "application/msword",
-    "vsd" : "application/vnd.visio",
-    "xls" : "application/vnd.ms-excel",
-    "ppt" : "application/vnd.ms-powerpoint",
-    "swf" : "application/x-shockwave-flash",
-    "ods" : "application/vnd.oasis.opendocument.spreadsheet",	
-    "odp" : "application/vnd.oasis.opendocument.presentation",	
-    "odt" : "application/vnd.oasis.opendocument.presentation",	
-    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",	
-    "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+	"json": "application/json",
+	"tar" : "application/x-tar",
+	"rar" : "application/vnd.rar",
+	"7z"  : "application/x-7z-compressed",
+	"m3u8": "application/vnd.apple.mpegurl",
+	
+	//TODO: Document Mimetype //	
+	"pdf" : "application/pdf",	
+	"doc" : "application/msword",
+	"vsd" : "application/vnd.visio",
+	"xls" : "application/vnd.ms-excel",
+	"ppt" : "application/vnd.ms-powerpoint",
+	"swf" : "application/x-shockwave-flash",
+	"ods" : "application/vnd.oasis.opendocument.spreadsheet",	
+	"odp" : "application/vnd.oasis.opendocument.presentation",	
+	"odt" : "application/vnd.oasis.opendocument.presentation",	
+	"xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+	"docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",	
+	"pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
 };
 
 //TODO: Main Class  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX //
