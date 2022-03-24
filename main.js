@@ -8,14 +8,6 @@ const fs = require('fs');
 
 //TODO: String Normalization XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 const mimeType = {	
-
-	//TODO: 3D Format Mimetype //
-	"fbx" : "text/plain",
-	"dae" : "text/plain",
-	"mtl" : "text/plain",
-	"obj" : "text/plain",
-	"glb" : "text/plain",
-	"gltf": "text/plain",
 	
 	//TODO: Font Mimetype //	
 	"otf" : "font/otf",
@@ -39,12 +31,11 @@ const mimeType = {
 	"mpeg": "video/mpeg",
 	"avi" : "video/x-msvideo",
 	
-	//TODO: Text Mimetype //
+	//TODO: Web Text Mimetype //
 	"css" : "text/css",
 	"csv" : "text/csv",
 	"html": "text/html",
-	"text": "text/plain",
-	"txt" : "text/plain",
+	"jsx" : "text/plain",
 	"ics" : "text/calendar",
 	"js"  : "text/javascript",
 	"xml" : "application/xhtml+xml",
@@ -89,6 +80,7 @@ const mimeType = {
 const mollyJS = function( Port, front_path, back_path ){
 	const mollyJS = {
 		port: process.env.PORT || Port,
+		keys: Object.keys( mimeType ),
 		max_age: 1000 * 60 * 60 * 24,
 		timeout: 1000 * 60 * 10,
 		front: front_path,
@@ -110,23 +102,21 @@ const mollyJS = function( Port, front_path, back_path ){
 	
 	mollyJS.header = function( mimeType="text/plain",size=0 ){
 		const header = {
-			'Content-Security-Policy-Reporn-Only': "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
-			'Strict-Transport-Security': `max-age=${mollyJS.max_age}; preload`,
-		//	'cache-control': `public, max-age=${mollyJS.max_age}`,
-		//	'Access-Control-Allow-Origin':'*',
-			'Content-Type':mimeType 
-		};
-		
-		if( size ) header['Content-Length'] = size;
+			"Content-Security-Policy-Reporn-Only": "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
+			"Strict-Transport-Security": `max-age=${mollyJS.max_age}; preload`,
+		//	"Cache-Control": `public, max-age=${mollyJS.max_age}`,
+		//	"Access-Control-Allow-Origin":'*',
+			"Content-Type":mimeType 
+		};	if( size ) header['Content-Length'] = size;
 		return header;
 	}
 
 	mollyJS.chunkheader = function( start,end,size,mimeType="text/plain" ){
 		const contentLength = end-start+1;
 		return {
-			'Content-Security-Policy-Reporn-Only': "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
-			'Strict-Transport-Security': `max-age=${mollyJS.max_age}; preload`,
-		//	'cache-control': `public, max-age=${mollyJS.max_age}`,
+			"Content-Security-Policy-Reporn-Only": "default-src 'self'; font-src 'self'; img-src 'self'; frame-src 'self';",
+			"Strict-Transport-Security": `max-age=${mollyJS.max_age}; preload`,
+			"Cache-Control": `public, max-age=${mollyJS.max_age}`,
 			"Content-Range":`bytes ${start}-${end}/${size}`,
 		//	"Access-Control-Allow-Origin":"*",
 			"Content-Length":contentLength,
@@ -136,15 +126,16 @@ const mollyJS = function( Port, front_path, back_path ){
 	}
 	
 	mollyJS.router = function( req,res ){
+		
 		req.parse = url.parse(req.url, true);
 		req.query = req.parse.query;
-		
+				
 		//TODO: _main_ Function  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		try{
-			let data = fs.readFileSync(`${mollyJS.back}/_main_.js`);
+			const data = fs.readFileSync(`${mollyJS.back}/_main_.js`);
 			eval( data.toString() );
 		} catch(e) { }
-	
+		
 		//TODO: Server Pages XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		if( req.parse.pathname=="/" ){
 			fs.readFile(`${mollyJS.front}/index.html`, (err,data)=>{
@@ -152,72 +143,79 @@ const mollyJS = function( Port, front_path, back_path ){
 					res.writeHead(404, mollyJS.header('text/html'));
 					return res.end( mollyJS._404_() ); }
 				res.writeHead(200, mollyJS.header('text/html'));
-				return res.end(data);
+				res.end(data); return 0;
 			});
 			
 		} else if( fs.existsSync(`${mollyJS.front}${req.parse.pathname}.html`) ) {
-			let data = fs.readFileSync(`${mollyJS.front}${req.parse.pathname}.html`);
+			const data = fs.readFileSync(`${mollyJS.front}${req.parse.pathname}.html`);
 			res.writeHead(200, mollyJS.header('text/html')); 
-			return res.end(data);
+			res.end(data); return 0;
 			
 		} else if( fs.existsSync(`${mollyJS.back}${req.parse.pathname}.js`) ) {
-			let data = fs.readFileSync(`${mollyJS.back}${req.parse.pathname}.js`);
+			const data = fs.readFileSync(`${mollyJS.back}${req.parse.pathname}.js`);
 			eval(` try{ ${data} } catch(err) { console.log( err );
-				res.writeHead(200, mollyJS.header('text/html'));
+				res.writeHead(404, mollyJS.header('text/html'));
 				res.end('something went wrong'); 
 			}`);return 0;
+		
 		}
 	
 		//TODO: Server Chunk XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		else{
-			const keys = Object.keys(mimeType);
-			for( var i in keys ){
-				if( req.parse.pathname.endsWith(keys[i]) ){
-			
-					try{	
-					
-						const url = (`${mollyJS.front}${req.parse.pathname}`);
-						const size = fs.statSync( url ).size;
-						const range = req.headers.range;
-					
-						if( !range ) { if( fs.existsSync( url ) ){
-							res.writeHead(200, mollyJS.header( mimeType[keys[i]],size ));
-							res.end( fs.readFileSync( url ) ); return 0;
-						}} else { 
-							const chuck_size = Math.pow( 10,6 ); 
-							const start = Number(range.replace(/\D/g,""));
-							const end = Math.min(chuck_size+start,size-1);
-							const chuck = fs.createReadStream( url,{start,end} );
-
-							res.writeHead(206, mollyJS.chunkheader( start,end,size,mimeType[keys[i]] ));
-							chuck.pipe( res ); return 0;
-						}
-						
-					} catch(e) {} return 0;
-						
+		
+			const _URL = (`${mollyJS.front}${req.parse.pathname}`);
+			for( var i in mollyJS.keys ){
+				if( req.parse.pathname.endsWith(mollyJS.keys[i]) ){
+					mollyJS.sendStaticFile( req,res,_URL,mimeType[mollyJS.keys[i]] );
+					return 0;					
 				}
+			}	
+			
+			if( fs.existsSync( _URL ) ){
+				mollyJS.sendStaticFile( req,res,_URL,'text/plain' );
+			} else {
+				res.writeHead(404, mollyJS.header('text/html'));
+				res.end( mollyJS._404_() );	
 			}
 			
-			res.writeHead(404, mollyJS.header('text/html'));
-			res.end( mollyJS._404_() );	
 		}
+			
 	}
 	
-	mollyJS.startHttpServer = function(){
-		let server = http.createServer( mollyJS.router ).listen( mollyJS.port,'0.0.0.0',()=>{
-			console.log(`server started at http://localhost:${mollyJS.port}`);
-		}); server.setTimeout( mollyJS.timeout );	
-	}
+	mollyJS.sendStaticFile = function( req,res,url,mimeType ){
+		try{	
+
+			const size = fs.statSync( url ).size;
+			const range = req.headers.range;
+					
+			if( !range ) {
+				res.writeHead(200, mollyJS.header( mimeType,size ));
+				res.end( fs.readFileSync( url ) );
 		
-	mollyJS.startHttpSecureServer = function( key_path, cert_path ){
-		let key = {
-			key: fs.readFileSync('localhost-privkey.pem'),
-			cert: fs.readFileSync('localhost-cert.pem')
-		}
+			} else { 
+				const chuck_size = Math.pow( 10,6 ); 
+				const start = Number(range.replace(/\D/g,""));
+				const end = Math.min(chuck_size+start,size-1);
+				const chuck = fs.createReadStream( url,{start,end} );
+
+				res.writeHead(206, mollyJS.chunkheader( start,end,size,mimeType ));
+				chuck.pipe( res );
+			}
+						
+		} catch(e) {}
+	}
 	
-		let server = https.createSecureServer( key, mollyJS.router ).listen( mollyJS.port,'0.0.0.0',()=>{
-			console.log(`server started at https://localhost:${mollyJS.port}`);
-		}); server.setTimeout( mollyJS.timeout );		
+	mollyJS.createServer = function( key_path="", cert_path="" ){
+		if( key_path!="" && cert_path!="" ){
+			const key = { key: fs.readFileSync(key_path), cert: fs.readFileSync(cert_path) };	
+			const server = https.createSecureServer( key, mollyJS.router ).listen( mollyJS.port,'0.0.0.0',()=>{
+				console.log(`server started at https://localhost:${mollyJS.port}`);
+			}); server.setTimeout( mollyJS.timeout );
+		} else {
+			const server = http.createServer( mollyJS.router ).listen( mollyJS.port,'0.0.0.0',()=>{
+				console.log(`server started at http://localhost:${mollyJS.port}`);
+			}); server.setTimeout( mollyJS.timeout );
+		}
 	}
 	
 	mollyJS._404_ = function(){ 
@@ -232,7 +230,7 @@ const mollyJS = function( Port, front_path, back_path ){
 	
 //TODO: Main Functions  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX //
 server = new mollyJS( 3000, './www', './controller' );
-server.startHttpServer();
+server.createServer();
 
 
 
