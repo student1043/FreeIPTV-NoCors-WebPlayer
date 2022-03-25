@@ -133,7 +133,7 @@ const mollyJS = function( Port, front_path, back_path ){
 		//TODO: _main_ Function  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		try{
 			const data = fs.readFileSync(`${mollyJS.back}/_main_.js`);
-			eval( data.toString() );
+			eval( `try{ ${data} } catch(e) {}` );
 		} catch(e) { }
 		
 		//TODO: Server Pages XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
@@ -164,15 +164,15 @@ const mollyJS = function( Port, front_path, back_path ){
 		else{
 		
 			const _URL = (`${mollyJS.front}${req.parse.pathname}`);
-			for( var i in mollyJS.keys ){
-				if( req.parse.pathname.endsWith(mollyJS.keys[i]) ){
-					mollyJS.sendStaticFile( req,res,_URL,mimeType[mollyJS.keys[i]] );
-					return 0;					
-				}
-			}	
 			
 			if( fs.existsSync( _URL ) ){
-				mollyJS.sendStaticFile( req,res,_URL,'text/plain' );
+				const _SIZE = fs.statSync( _URL ).size;
+				for( var i in mollyJS.keys ){
+					if( req.parse.pathname.endsWith(mollyJS.keys[i]) ){
+						mollyJS.sendStaticFile( req,res,_URL,_SIZE,mimeType[mollyJS.keys[i]] );
+						return 0;
+					}
+				}	mollyJS.sendStaticFile( req,res,_URL,_SIZE,'text/plain' );
 			} else {
 				res.writeHead(404, mollyJS.header('text/html'));
 				res.end( mollyJS._404_() );	
@@ -182,27 +182,22 @@ const mollyJS = function( Port, front_path, back_path ){
 			
 	}
 	
-	mollyJS.sendStaticFile = function( req,res,url,mimeType ){
-		try{	
-
-			const size = fs.statSync( url ).size;
-			const range = req.headers.range;
+	mollyJS.sendStaticFile = function( req,res,url,size,mimeType ){
+		const range = req.headers.range;
 					
-			if( !range ) {
-				res.writeHead(200, mollyJS.header( mimeType,size ));
-				res.end( fs.readFileSync( url ) );
+		if( !range ) {
+			res.writeHead(200, mollyJS.header( mimeType,size ));
+			res.end( fs.readFileSync( url ) );
 		
-			} else { 
-				const chuck_size = Math.pow( 10,6 ); 
-				const start = Number(range.replace(/\D/g,""));
-				const end = Math.min(chuck_size+start,size-1);
-				const chuck = fs.createReadStream( url,{start,end} );
+		} else { 
+			const chuck_size = Math.pow( 10,6 ); 
+			const start = Number(range.replace(/\D/g,""));
+			const end = Math.min(chuck_size+start,size-1);
+			const chuck = fs.createReadStream( url,{start,end} );
 
-				res.writeHead(206, mollyJS.chunkheader( start,end,size,mimeType ));
-				chuck.pipe( res );
-			}
-						
-		} catch(e) {}
+			res.writeHead(206, mollyJS.chunkheader( start,end,size,mimeType ));
+			chuck.pipe( res );
+		}
 	}
 	
 	mollyJS.createServer = function( key_path="", cert_path="" ){
