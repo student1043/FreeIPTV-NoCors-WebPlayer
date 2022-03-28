@@ -1,0 +1,23 @@
+#image{ width: 250px; }
+
+p{ text-align: justify; }
+
+img{ 
+    filter: contrast(1.2);
+    border-radius: 10px;
+    object-fit: unset;
+    background: white;
+}
+
+
+video{ 
+	max-height:100vh;
+	object-fit: fill; 	
+	filter:contrast(1.2); 
+}
+
+.uk-red{ background: red !important; }
+.uk-alpha{ background: #00000000 !important; }
+.uk-blue{ background: dodgerblue !important; }
+.uk-dark,html { background: #070d0e !important; }
+.uk-green{ background: mediumseagreen !important; } 

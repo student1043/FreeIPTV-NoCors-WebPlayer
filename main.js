@@ -127,37 +127,38 @@ const mollyJS = function( Port, front_path, back_path ){
 	
 	mollyJS.router = function( req,res ){
 		
+		//TODO: Res Api XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
+		
 		req.parse = url.parse(req.url, true);
 		req.query = req.parse.query;
-				
+		
+		res.send = ( status, data, mimetype='text/html' )=>{
+			res.writeHead(status, mollyJS.header(mimetype));
+			res.end( data ); return 0;
+		}		
+		
 		//TODO: _main_ Function  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		try{
 			const data = fs.readFileSync(`${mollyJS.back}/_main_.js`);
 			eval( `try{ ${data} } catch(e) {}` );
 		} catch(e) { }
-		
+				
 		//TODO: Server Pages XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
 		if( req.parse.pathname=="/" ){
 			fs.readFile(`${mollyJS.front}/index.html`, (err,data)=>{
-				if (err) {
-					res.writeHead(404, mollyJS.header('text/html'));
-					return res.end( mollyJS._404_() ); }
-				res.writeHead(200, mollyJS.header('text/html'));
-				res.end(data); return 0;
+				if (err) { return res.send( 404, mollyJS._404_() ); }
+				return res.send( 200,data ); 
 			});
 			
 		} else if( fs.existsSync(`${mollyJS.front}${req.parse.pathname}.html`) ) {
 			const data = fs.readFileSync(`${mollyJS.front}${req.parse.pathname}.html`);
-			res.writeHead(200, mollyJS.header('text/html')); 
-			res.end(data); return 0;
+			return res.send( 200,data ); 
 			
 		} else if( fs.existsSync(`${mollyJS.back}${req.parse.pathname}.js`) ) {
 			const data = fs.readFileSync(`${mollyJS.back}${req.parse.pathname}.js`);
 			eval(` try{ ${data} } catch(err) { console.log( err );
-				res.writeHead(404, mollyJS.header('text/html'));
-				res.end('something went wrong'); 
+				res.send( 404, 'something went wrong' );
 			}`);return 0;
-		
 		}
 	
 		//TODO: Server Chunk XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX//
@@ -168,15 +169,10 @@ const mollyJS = function( Port, front_path, back_path ){
 			if( fs.existsSync( _URL ) ){
 				const _SIZE = fs.statSync( _URL ).size;
 				for( var i in mollyJS.keys ){
-					if( req.parse.pathname.endsWith(mollyJS.keys[i]) ){
-						mollyJS.sendStaticFile( req,res,_URL,_SIZE,mimeType[mollyJS.keys[i]] );
-						return 0;
-					}
+					if( req.parse.pathname.endsWith(mollyJS.keys[i]) )
+						return mollyJS.sendStaticFile( req,res,_URL,_SIZE,mimeType[mollyJS.keys[i]] );
 				}	mollyJS.sendStaticFile( req,res,_URL,_SIZE,'text/plain' );
-			} else {
-				res.writeHead(404, mollyJS.header('text/html'));
-				res.end( mollyJS._404_() );	
-			}
+			} else { return res.send( 404, mollyJS._404_() ); }
 			
 		}
 			
@@ -200,10 +196,10 @@ const mollyJS = function( Port, front_path, back_path ){
 		}
 	}
 	
-	mollyJS.createServer = function( key_path="", cert_path="" ){
-		if( key_path!="" && cert_path!="" ){
-			const key = { key: fs.readFileSync(key_path), cert: fs.readFileSync(cert_path) };	
-			const server = https.createSecureServer( key, mollyJS.router ).listen( mollyJS.port,'0.0.0.0',()=>{
+	mollyJS.createServer = function( privatekey="", certkey="" ){
+		if( privatekey!="" && certkey!="" ){
+			const ssl_key = { key: privatekey, cert: certkey };	
+			const server = https.createSecureServer( ssl_key, mollyJS.router ).listen( mollyJS.port,'0.0.0.0',()=>{
 				console.log(`server started at https://localhost:${mollyJS.port}`);
 			}); server.setTimeout( mollyJS.timeout );
 		} else {
