@@ -2,7 +2,7 @@
 let i=0, page = '';
 
 const readline = require('readline').createInterface({
-  	input: fs.createReadStream('./model/output.json')
+  	input: fs.createReadStream(`${mollyJS.dirname}/model/output.json`)
 });
 
 loadPage = (line)=>{

@@ -9,7 +9,7 @@ let _url = req.url.replace('/vid?path=','');
 axios( _url,{responseType: 'text'} )
 .then( response=>{
 	
-	let page = new String();
+	let page = '';
 	let line = response.data.split('\n');
 		line.pop();
 	
@@ -39,4 +39,7 @@ axios( _url,{responseType: 'text'} )
 	
 	res.send( 200, page );
 	
-}).catch( err=>{ res.send( 404, 'something went wrong' ); });
+}).catch( err=>{ 	
+	console.log( error.body );
+	res.send( 404, 'something went wrong' ); 
+});

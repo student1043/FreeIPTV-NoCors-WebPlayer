@@ -87,6 +87,8 @@ const mollyJS = function( Port, front_path, back_path ){
 		back: back_path,
 	};
 	
+	mollyJS.dirname = `${__dirname}`;
+	
 	mollyJS.slugify = function(str){ const map = {
 		'c' : 'ç|Ç','n' : 'ñ|Ñ',
 	   	'e' : 'é|è|ê|ë|É|È|Ê|Ë',
@@ -220,7 +222,7 @@ const mollyJS = function( Port, front_path, back_path ){
 };
 	
 //TODO: Main Functions  XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX XXX //
-server = new mollyJS( 3000, './www', './controller' );
+server = new mollyJS( 3000, `${__dirname}/www`, `${__dirname}/controller` );
 server.createServer();
 
 

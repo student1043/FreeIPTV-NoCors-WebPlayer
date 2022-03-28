@@ -7,4 +7,7 @@ let _url = req.url.replace('/img?path=','');
 
 axios( _url,{responseType: 'arraybuffer'} )
 .then( response=>{ res.send( 200, response.data ); })
-.catch( err=>{ res.send( 404, 'something went wrong' ); });
+.catch( err=>{ 
+	console.log( response.data );
+	res.send( 404, 'something went wrong' );
+});
