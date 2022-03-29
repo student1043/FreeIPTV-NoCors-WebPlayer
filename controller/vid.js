@@ -32,8 +32,8 @@ axios( _url,{responseType: 'text'} )
 		continue; } 	
 		
 		//	if( !line[i].search('#EXT-X-KEY')>=0 ) continue
-		//	page += `${line[i].replace(/http/,'/img?path=http').replace(/:\/\//g,'_')}\n`;
-		page += `${line[i]}\n`;
+			page += `${line[i].replace(/http/,'/img?path=http').replace(/:\/\//g,'_')}\n`;
+		//	page += `${line[i]}\n`;
 		
 	}
 	
