@@ -39,7 +39,4 @@ axios( _url,{responseType: 'text'} )
 	
 	res.send( 200, page );
 	
-}).catch( err=>{ 	
-	console.log( error.body );
-	res.send( 404, 'something went wrong' ); 
-});
+}).catch( err=>{ res.send( 404, 'something went wrong' ); });
